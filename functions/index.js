@@ -30,6 +30,8 @@ exports.moderator = functions.firestore
         },
         { merge: true }
       );
+    } else {
+      return null;
     }
   });
 
@@ -44,7 +46,7 @@ exports.generateThumbnail = functions.storage.object().onChange(event => {
 
   if (!contentType.startsWith("image/")) {
     console.log("This is not an image.");
-    return;
+    return null;
   }
 
   // Get the file name.
@@ -52,20 +54,20 @@ exports.generateThumbnail = functions.storage.object().onChange(event => {
   // Exit if the image is already a thumbnail.
   if (fileName.startsWith("thumb_")) {
     console.log("Already a Thumbnail.");
-    return;
+    return null;
   }
 
   // Exit if this is a move or deletion event.
   if (resourceState === "not_exists") {
     console.log("This is a deletion event.");
-    return;
+    return null;
   }
 
   // Exit if file exists but is not new and is only being triggered
   // because of a metadata change.
   if (resourceState === "exists" && metageneration > 1) {
     console.log("This is a metadata change event.");
-    return;
+    return null;
   }
   // [END stopConditions]
 
@@ -134,6 +136,9 @@ exports.generateThumbnail = functions.storage.object().onChange(event => {
         },{ merge: true });
 
       })
+      .then(()=>{
+        console.log('Google Vision response saved to the database');
+      })
       .catch(err => {
         console.error('ERROR:', err);
       });
@@ -141,7 +146,9 @@ exports.generateThumbnail = functions.storage.object().onChange(event => {
       return admin.firestore().collection("comments").doc(id).set({
         avatar : url[0]
       },{ merge: true });
-    })
+    }).then(()=>{
+        console.log('Avatar created and saved to the database');
+    });
 });
 
 function moderateComment(comment) {
