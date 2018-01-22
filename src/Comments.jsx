@@ -28,13 +28,15 @@ function WordCloud(props) {
   const rotate = word => word.value % 360;
 
   return (
+    <div style={{display:'flex',flexDirection:'column'}}>
     <Cloud 
       data={props.data}
       fontSizeMapper={fontSizeMapper}
       rotate={rotate}
-      width={1000}
+      width={800}
       height={600}
     ></Cloud>
+    </div>
   )
 }
 
@@ -54,6 +56,7 @@ function CommentsGrid(props) {
                     className="avatar"
                     src={comment.avatar !== "" ? comment.avatar : "https://api.adorable.io/avatars/150/" + comment.name }
                     alt={"Avatar for " + comment.name}
+                    title={comment.labels}
                   />
                 </li>
                 <li>@{comment.name}</li>
@@ -80,28 +83,34 @@ class Comments extends Component {
   componentDidMount() {
 
     let comments = [];
+    let wordCloudSet = new Set();
     let wordCloud = [];
 
     this.unsubscribe = db.collection("comments").onSnapshot(querySnapshot => {
       comments = [];
       wordCloud = [];
+
       querySnapshot.forEach(doc => {
         let comment = {};
         comment.name = doc.get("name");
         comment.text = doc.get("text");
         comment.rating = doc.get("rating");
         comment.avatar = doc.get("avatar");
-        comments.push(comment);
         let labels = doc.get("labels");
+
         if (labels !== undefined) {
           labels.forEach((label)=>{
             let tag = {};
             tag.text = label;
             tag.value = label.length * 10;
-            wordCloud.push(tag);
+            if (!wordCloudSet.has(label)) {
+              wordCloud.push(tag);
+              wordCloudSet.add(label);
+            }
           });
+          comment.labels = labels.join(",");
         }
-        
+        comments.push(comment);
       });
 
       this.setState(() => {
