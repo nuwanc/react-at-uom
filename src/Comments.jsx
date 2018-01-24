@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import Cloud from 'react-d3-cloud';
 import {db} from "./firebase";
 
 function SelectRating(props) {
@@ -23,23 +22,6 @@ function SelectRating(props) {
   );
 }
 
-function WordCloud(props) {
-  const fontSizeMapper = word => Math.log2(word.value) * 5;
-  const rotate = word => word.value % 360;
-
-  return (
-    <div style={{display:'flex',flexDirection:'column'}}>
-    <Cloud 
-      data={props.data}
-      fontSizeMapper={fontSizeMapper}
-      rotate={rotate}
-      width={800}
-      height={600}
-    ></Cloud>
-    </div>
-  )
-}
-
 function CommentsGrid(props) {
   return (
     <ul className="popular-list">
@@ -61,6 +43,7 @@ function CommentsGrid(props) {
                 </li>
                 <li>@{comment.name}</li>
                 <div className="comment">{comment.text}</div>
+                <div className="labels">{comment.labels}</div>
               </ul>
             </li>
           );
@@ -83,12 +66,9 @@ class Comments extends Component {
   componentDidMount() {
 
     let comments = [];
-    let wordCloudSet = new Set();
-    let wordCloud = [];
 
     this.unsubscribe = db.collection("comments").onSnapshot(querySnapshot => {
       comments = [];
-      wordCloud = [];
 
       querySnapshot.forEach(doc => {
         let comment = {};
@@ -99,24 +79,14 @@ class Comments extends Component {
         let labels = doc.get("labels");
 
         if (labels !== undefined) {
-          labels.forEach((label)=>{
-            let tag = {};
-            tag.text = label;
-            tag.value = label.length * 10;
-            if (!wordCloudSet.has(label)) {
-              wordCloud.push(tag);
-              wordCloudSet.add(label);
-            }
-          });
           comment.labels = labels.join(",");
         }
         comments.push(comment);
       });
 
-      this.setState(() => {
+      this.setState((prevState) => {
         return {
-          comments: comments,
-          wordCloud: wordCloud
+          comments: comments
         };
       });
     });
@@ -145,7 +115,6 @@ class Comments extends Component {
           comments={this.state.comments}
           selectedRating={this.state.selectedRating}
         />
-        <WordCloud data={this.state.wordCloud}/>
       </div>
     );
   }
