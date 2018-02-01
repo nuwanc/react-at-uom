@@ -43,7 +43,11 @@ function CommentsGrid(props) {
                 </li>
                 <li>@{comment.name}</li>
                 <div className="comment">{comment.text}</div>
-                <div className="labels">{comment.labels}</div>
+                {comment.labels ? <ul className="labels">
+                {comment.labels.split(",").map((label,i)=>{
+                    return <li key={i}>{label}</li>
+                })}
+                </ul> : null }
               </ul>
             </li>
           );
