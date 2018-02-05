@@ -12,6 +12,7 @@ const fs = require("fs");
 const admin = require('firebase-admin');
 admin.initializeApp(functions.config().firebase);
 
+//based on sample code in github -> https://github.com/firebase/functions-samples
 exports.moderator = functions.firestore
   .document("/comments/{commentsId}")
   .onWrite(event => {
